@@ -1,14 +1,53 @@
-name: Build Chrome extension
+name: Release Chrome extension
 
 on:
   push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: chrome-extension-release
+  cancel-in-progress: false
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      release-needed: ${{ steps.version.outputs.release-needed }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check package version
+        id: version
+        shell: bash
+        run: |
+          version=$(node -p "JSON.parse(require('fs').readFileSync('package.json', 'utf8')).version")
+          tag="v${version}"
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "release-needed=false" >> "$GITHUB_OUTPUT"
+            echo "${tag} already exists; skipping release."
+          else
+            echo "release-needed=true" >> "$GITHUB_OUTPUT"
+            echo "${tag} does not exist; a release will be created."
+          fi
+
   build:
+    needs: check-version
+    if: needs.check-version.outputs.release-needed == 'true'
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +66,41 @@ jobs:
       - name: Build Chrome ZIP
         run: npm run zip
 
-      - name: Upload Chrome ZIP
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: chrome-extension-zip
           path: .output/*-chrome.zip
           if-no-files-found: error
           retention-days: 30
+
+  release:
+    needs: [check-version, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download Chrome ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: chrome-extension-zip
+          path: release
+
+      - name: Create version tag
+        env:
+          TAG: ${{ needs.check-version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check-version.outputs.tag }}
+          name: Site Notes ${{ needs.check-version.outputs.version }}
+          generate_release_notes: true
+          files: release/*-chrome.zip
