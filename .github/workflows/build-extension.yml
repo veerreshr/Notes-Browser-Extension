@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -52,12 +52,12 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -66,11 +66,21 @@ jobs:
       - name: Build Chrome ZIP
         run: npm run zip
 
+      - name: Normalize ZIP filename
+        shell: bash
+        run: |
+          zip_file=$(find .output -maxdepth 1 -type f -name '*-chrome.zip' -print -quit)
+          if [ -z "$zip_file" ]; then
+            echo "Chrome ZIP was not generated" >&2
+            exit 1
+          fi
+          cp "$zip_file" .output/chrome-extension.zip
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: chrome-extension-zip
-          path: .output/*-chrome.zip
+          path: .output/chrome-extension.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -80,7 +90,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download Chrome ZIP
         uses: actions/download-artifact@v4
@@ -103,4 +113,4 @@ jobs:
           tag_name: ${{ needs.check-version.outputs.tag }}
           name: Site Notes ${{ needs.check-version.outputs.version }}
           generate_release_notes: true
-          files: release/*-chrome.zip
+          files: release/chrome-extension.zip
