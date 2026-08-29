@@ -2,7 +2,7 @@
   "name": "notes-chrome-extension",
   "description": "Take notes on any website — stored locally, scoped by URL or domain",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",
