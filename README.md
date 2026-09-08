@@ -2,6 +2,10 @@
 
 A Chrome side-panel extension for taking notes on any website. Notes are stored locally in browser storage and can be scoped to the current URL or the entire domain.
 
+## Try It
+
+[Install Site Notes from Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/site-notes/copilkogjfmfhbncggnmnfafjgakjhai).
+
 ## Features
 
 - Open notes from the Chrome side panel.
