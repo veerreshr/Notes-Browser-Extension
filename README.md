@@ -95,7 +95,7 @@ wxt.config.ts           WXT and extension manifest configuration
 The extension requests these Chrome permissions:
 
 - `storage` for saving notes locally
-- `activeTab` and `tabs` for reading the active page and tracking tab changes
+- `tabs` for reading the active page URL and tracking tab changes
 - `sidePanel` for displaying the notes interface
 
 No server or external database is required. Notes remain in the browser profile where they were created.

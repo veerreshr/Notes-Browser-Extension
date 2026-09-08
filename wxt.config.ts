@@ -6,7 +6,7 @@ export default defineConfig({
   manifest: {
     name: "Site Notes",
     description: "Take notes on any website — stored locally per URL or domain",
-    permissions: ["storage", "activeTab", "sidePanel", "tabs"],
+    permissions: ["storage", "sidePanel", "tabs"],
     action: {
       default_title: "Open Site Notes",
       default_icon: {
